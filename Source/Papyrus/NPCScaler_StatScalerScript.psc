@@ -9,7 +9,7 @@ GlobalVariable Property Venpi_DebugEnabled Auto Const Mandatory
 GlobalVariable Property NPCScaler_Enabled Auto Const Mandatory
 GlobalVariable Property NPCScaler_ScalingMin Auto Const Mandatory
 GlobalVariable Property NPCScaler_ScalingMax Auto Const Mandatory
-GlobalVariable Property  NPCScaler_Legendary_ChanceNotToSpawn Auto Const Mandatory
+GlobalVariable Property NPCScaler_Legendary_ChanceToSpawn Auto Const Mandatory
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -117,25 +117,32 @@ Function HandleStatScaling()
 
   int encounterlevel = RealMe.CalculateEncounterLevel(Game.GetDifficulty())
 
+  ; DebugLevelScaling("INITIAL")
+
   If (RealMe.HasKeyword(ActorTypeLegendary))
-      VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "HandleStatScaling",  Myself + "> is already a legendary so skipping becasue the engine handle stat scaling for legendary NPCs fairly well.", 0, Venpi_DebugEnabled.GetValueInt())
-      DebugLevelScaling("FINAL")
+      VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "HandleStatScaling",  Myself + "> is already a legendary so skipping because the engine handle stat scaling for legendary NPCs fairly well.", 0, Venpi_DebugEnabled.GetValueInt())
+      ; DebugLevelScaling("FINAL")
       return
   EndIf
 
-  If (NPCScaler_Legendary_ChanceNotToSpawn.GetValueInt() == 0 || Game.GetDieRollSuccess(NPCScaler_Legendary_ChanceNotToSpawn.GetValueInt(), 1, 100, -1, -1))
+  Int chanceLegendary = NPCScaler_Legendary_ChanceToSpawn.GetValueInt()
+  if (chanceLegendary <= 0)
+    chanceLegendary = 0
+  ElseIF (chanceLegendary >= 100)
+    chanceLegendary = 100
+  EndIf
+  If (chanceLegendary == 100 || Game.GetDieRollSuccess(chanceLegendary, 1, 100, -1, -1))
     ;; Won the lotto I become a legendary
-    VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "HandleStatScaling",  Myself + "> has won the lottoe and is now a legendary so skipping becasue the engine handle stat scaling for legendary NPCs fairly well.", 0, Venpi_DebugEnabled.GetValueInt())
+    VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "HandleStatScaling",  Myself + "> has won the lotto and is now a legendary so skipping because the engine handle stat scaling for legendary NPCs fairly well.", 0, Venpi_DebugEnabled.GetValueInt())
     LegendaryAliasQuest.MakeLegendary(RealMe)
-    DebugLevelScaling("FINAL")
+    ; DebugLevelScaling("FINAL")
     return
   EndIf
 
-  DebugLevelScaling("INITIAL")
-
   Float npcScalingAdjustmentToPlayer = GetScalingAdjustmentForDifficulty()
 
-  string message = Myself + "> Calculated a stat adjustment factor of " + npcScalingAdjustmentToPlayer + ".\n"
+  string message = "\n\n -=-=-=-=-= STAT DEBUG (" + Myself + ") =-=-=-=-=-\n\n"
+  message += "Calculated a stat adjustment factor of " + npcScalingAdjustmentToPlayer + ".\n"
 
   int scaledHealth = Math.Round(playerHealth * npcScalingAdjustmentToPlayer)
   RealMe.SetValue(Health, scaledHealth)
@@ -168,6 +175,7 @@ Function HandleStatScaling()
   message += "Adjusting my critical damage multiplier to " + scaledCriticalHitDamageMult + " from " + myCriticalHitDamageMult + " against the player's " + playerCriticalHitDamageMult + ".\n"
   RealMe.SetValue(CriticalHitDamageMult, scaledCriticalHitDamageMult)
 
+  message += "\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n\n"
   VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "HandleStatScaling", message, 0, Venpi_DebugEnabled.GetValueInt())
   DebugLevelScaling("FINAL")
 EndFunction
@@ -176,8 +184,7 @@ Float Function GetScalingAdjustmentForDifficulty()
   Int iDifficulty = Game.GetDifficulty()
   string sDifficulty = VPI_GameUtilities.GetDifficulty(iDifficulty)
 
-  Float adjustmentFactor = Utility.RandomFloat(NPCScaler_ScalingMin.GetValue(),NPCScaler_ScalingMax.GetValue())
-  Float base = ((100 - (100 * adjustmentFactor))/100)
+  Float base = Utility.RandomFloat(NPCScaler_ScalingMin.GetValue(),NPCScaler_ScalingMax.GetValue())
   Float calculated = 1
   if (iDifficulty == 0)
     ;; Very Easy Difficulty
@@ -190,10 +197,10 @@ Float Function GetScalingAdjustmentForDifficulty()
     calculated = base + 0.25
   ElseIf (iDifficulty == 3)
     ;; Hard Difficulty
-    calculated = base + 0.50
+    calculated = base + 0.75
   ElseIf (iDifficulty == 4)
     ;; Very Hard Difficulty
-    calculated = base + 0.75
+    calculated = base + 1.25
   Else 
     ;; Really can only be survival mode
     calculated = base + 5.00
@@ -205,7 +212,8 @@ EndFunction
 Function DebugLevelScaling(String scalingState)
   int playerLevel = Player.GetLevel()
   int myLevel = RealMe.GetLeveledActorBase().GetLevel()
-  string message = Myself + "> Scaling for a player of level " + playerLevel + " and my level is " + myLevel + ".\n"
+  string message = "\n\n ********** STAT DEBUG (" + scalingState +  "-" + Myself + ") ********** \n\n"
+  message += "Scaling for a player of level " + playerLevel + " and my level is " + myLevel + ".\n"
 
   int playerHealth = Player.GetValueInt(Health)
   int myHealth = RealMe.GetValueInt(Health)
@@ -255,5 +263,6 @@ Function DebugLevelScaling(String scalingState)
   message += "My/Player Critical Hit Damage Multiplier: " + myCriticalHitDamageMult + " | " + playerCriticalHitDamageMult + ".\n"
   message += "My/Player Attack Damage Multiplier: " + myAttackDamageMult + " | " + playerAttackDamageMult + ".\n"
 
+  message += "\n************************************************************\n\n"
   VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "DebugLevelScaling-" + scalingState, message, 0, Venpi_DebugEnabled.GetValueInt())
 EndFunction
