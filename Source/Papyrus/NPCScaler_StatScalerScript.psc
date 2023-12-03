@@ -11,6 +11,13 @@ GlobalVariable Property NPCScaler_ScalingMin Auto Const Mandatory
 GlobalVariable Property NPCScaler_ScalingMax Auto Const Mandatory
 GlobalVariable Property NPCScaler_Legendary_ChanceToSpawn Auto Const Mandatory
 
+GlobalVariable Property NPCScaler_BaseAdjustment_VE Auto Const Mandatory
+GlobalVariable Property NPCScaler_BaseAdjustment_E Auto Const Mandatory
+GlobalVariable Property NPCScaler_BaseAdjustment_N Auto Const Mandatory
+GlobalVariable Property NPCScaler_BaseAdjustment_H Auto Const Mandatory
+GlobalVariable Property NPCScaler_BaseAdjustment_VH Auto Const Mandatory
+GlobalVariable Property NPCScaler_BaseAdjustment_TSV Auto Const Mandatory
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Properties
@@ -182,28 +189,27 @@ EndFunction
 
 Float Function GetScalingAdjustmentForDifficulty()
   Int iDifficulty = Game.GetDifficulty()
-  string sDifficulty = VPI_GameUtilities.GetDifficulty(iDifficulty)
 
   Float base = Utility.RandomFloat(NPCScaler_ScalingMin.GetValue(),NPCScaler_ScalingMax.GetValue())
   Float calculated = 1
   if (iDifficulty == 0)
     ;; Very Easy Difficulty
-    calculated = base + 0.05
+    calculated = base + NPCScaler_BaseAdjustment_VE.GetValue()
   ElseIf (iDifficulty == 1)
     ;; Easy Difficulty
-    calculated = base + 0.10
+    calculated = base + NPCScaler_BaseAdjustment_E.GetValue()
   ElseIf (iDifficulty == 2)
     ;; Normal Difficulty
-    calculated = base + 0.25
+    calculated = base + NPCScaler_BaseAdjustment_N.GetValue()
   ElseIf (iDifficulty == 3)
     ;; Hard Difficulty
-    calculated = base + 0.75
+    calculated = base + NPCScaler_BaseAdjustment_H.GetValue()
   ElseIf (iDifficulty == 4)
     ;; Very Hard Difficulty
-    calculated = base + 1.25
+    calculated = base + NPCScaler_BaseAdjustment_VH.GetValue()
   Else 
-    ;; Really can only be survival mode
-    calculated = base + 5.00
+    ;; Really can only be survival/nightmare mode
+    calculated = base + NPCScaler_BaseAdjustment_TSV.GetValue()
   EndIf
 
   return calculated
