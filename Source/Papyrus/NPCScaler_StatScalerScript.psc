@@ -24,6 +24,8 @@ GlobalVariable Property NPCScaler_BaseAdjustment_TSV Auto Const Mandatory
 ;;;
 Keyword Property NPCScaler_Scaled Auto Const Mandatory
 
+ConditionForm Property ActorIsCreature Auto Const Mandatory
+
 ActorValue Property Health Auto Const Mandatory
 ActorValue Property DamageResist Auto Const Mandatory
 ActorValue Property EnergyResist Auto Const Mandatory
@@ -66,6 +68,18 @@ Event OnEffectStart(ObjectReference akTarget, Actor akCaster, MagicEffect akBase
   Myself = akTarget
   RealMe = akTarget.GetSelfAsActor()
   Player = PlayerRef.GetSelfAsActor()
+  
+  ;; System Generated Legendaty NPC we can't mess with. 
+  If (RealMe.HasKeyword(ActorTypeLegendary))
+    VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "HandleStatScaling",  Myself + "(" + RealMe.GetRace() + ")> is already a legendary so skipping because the engine handle stat scaling for legendary NPCs fairly well.", 0, Venpi_DebugEnabled.GetValueInt())
+    ; DebugLevelScaling("FINAL")
+    Return
+  EndIf
+
+  If (ActorIsCreature.IsTrue(Myself, PlayerRef))
+    VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "HandleStatScaling",  Myself + "(" + RealMe.GetRace() + ")> is a creature so bypassing scaling. For some scaled CCT NPCs become gods.", 0, Venpi_DebugEnabled.GetValueInt())
+    Return
+  EndIf
 
   ;; Have a race condition which shouldn't be possible but injecting a keyword to prevent reprossessing. 
   If (Myself.HasKeyword(NPCScaler_Scaled)) 
@@ -125,12 +139,6 @@ Function HandleStatScaling()
   int encounterlevel = RealMe.CalculateEncounterLevel(Game.GetDifficulty())
 
   ; DebugLevelScaling("INITIAL")
-
-  If (RealMe.HasKeyword(ActorTypeLegendary))
-      VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "HandleStatScaling",  Myself + "> is already a legendary so skipping because the engine handle stat scaling for legendary NPCs fairly well.", 0, Venpi_DebugEnabled.GetValueInt())
-      ; DebugLevelScaling("FINAL")
-      return
-  EndIf
 
   Int chanceLegendary = NPCScaler_Legendary_ChanceToSpawn.GetValueInt()
   if (chanceLegendary <= 0)
