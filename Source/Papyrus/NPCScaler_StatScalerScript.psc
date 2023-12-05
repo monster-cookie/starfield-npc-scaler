@@ -7,16 +7,36 @@ Scriptname NPCScaler_StatScalerScript extends ActiveMagicEffect
 GlobalVariable Property Venpi_DebugEnabled Auto Const Mandatory
 
 GlobalVariable Property NPCScaler_Enabled Auto Const Mandatory
-GlobalVariable Property NPCScaler_ScalingMin Auto Const Mandatory
-GlobalVariable Property NPCScaler_ScalingMax Auto Const Mandatory
 GlobalVariable Property NPCScaler_Legendary_ChanceToSpawn Auto Const Mandatory
 
-GlobalVariable Property NPCScaler_BaseAdjustment_VE Auto Const Mandatory
-GlobalVariable Property NPCScaler_BaseAdjustment_E Auto Const Mandatory
-GlobalVariable Property NPCScaler_BaseAdjustment_N Auto Const Mandatory
-GlobalVariable Property NPCScaler_BaseAdjustment_H Auto Const Mandatory
-GlobalVariable Property NPCScaler_BaseAdjustment_VH Auto Const Mandatory
-GlobalVariable Property NPCScaler_BaseAdjustment_TSV Auto Const Mandatory
+GlobalVariable Property NPCScaler_Default_Base Auto Const Mandatory
+GlobalVariable Property NPCScaler_Default_ScaleRangeMin Auto Const Mandatory
+GlobalVariable Property NPCScaler_Default_ScaleRangeMax Auto Const Mandatory
+GlobalVariable Property NPCScaler_Default_EasterEggMode Auto Const Mandatory
+
+GlobalVariable Property NPCScaler_Critter_Enabled Auto Const Mandatory
+GlobalVariable Property NPCScaler_Critter_Base Auto Const Mandatory
+GlobalVariable Property NPCScaler_Critter_ScaleRangeMin Auto Const Mandatory
+GlobalVariable Property NPCScaler_Critter_ScaleRangeMax Auto Const Mandatory
+GlobalVariable Property NPCScaler_Critter_EasterEggMode Auto Const Mandatory
+
+GlobalVariable Property NPCScaler_Creature_Enabled Auto Const Mandatory
+GlobalVariable Property NPCScaler_Creature_Base Auto Const Mandatory
+GlobalVariable Property NPCScaler_Creature_ScaleRangeMin Auto Const Mandatory
+GlobalVariable Property NPCScaler_Creature_ScaleRangeMax Auto Const Mandatory
+GlobalVariable Property NPCScaler_Creature_EasterEggMode Auto Const Mandatory
+
+GlobalVariable Property NPCScaler_Human_Enabled Auto Const Mandatory
+GlobalVariable Property NPCScaler_Human_Base Auto Const Mandatory
+GlobalVariable Property NPCScaler_Human_ScaleRangeMin Auto Const Mandatory
+GlobalVariable Property NPCScaler_Human_ScaleRangeMax Auto Const Mandatory
+GlobalVariable Property NPCScaler_Human_EasterEggMode Auto Const Mandatory
+
+GlobalVariable Property NPCScaler_Robot_Enabled Auto Const Mandatory
+GlobalVariable Property NPCScaler_Robot_Base Auto Const Mandatory
+GlobalVariable Property NPCScaler_Robot_ScaleRangeMin Auto Const Mandatory
+GlobalVariable Property NPCScaler_Robot_ScaleRangeMax Auto Const Mandatory
+GlobalVariable Property NPCScaler_Robot_EasterEggMode Auto Const Mandatory
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -24,7 +44,10 @@ GlobalVariable Property NPCScaler_BaseAdjustment_TSV Auto Const Mandatory
 ;;;
 Keyword Property NPCScaler_Scaled Auto Const Mandatory
 
+ConditionForm Property ActorIsCritter Auto Const Mandatory
 ConditionForm Property ActorIsCreature Auto Const Mandatory
+ConditionForm Property ActorIsHuman Auto Const Mandatory
+ConditionForm Property ActorIsRobot Auto Const Mandatory
 
 ActorValue Property Health Auto Const Mandatory
 ActorValue Property DamageResist Auto Const Mandatory
@@ -68,18 +91,6 @@ Event OnEffectStart(ObjectReference akTarget, Actor akCaster, MagicEffect akBase
   Myself = akTarget
   RealMe = akTarget.GetSelfAsActor()
   Player = PlayerRef.GetSelfAsActor()
-  
-  ;; System Generated Legendaty NPC we can't mess with. 
-  If (RealMe.HasKeyword(ActorTypeLegendary))
-    VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "HandleStatScaling",  Myself + "(" + RealMe.GetRace() + ")> is already a legendary so skipping because the engine handle stat scaling for legendary NPCs fairly well.", 0, Venpi_DebugEnabled.GetValueInt())
-    ; DebugLevelScaling("FINAL")
-    Return
-  EndIf
-
-  If (ActorIsCreature.IsTrue(Myself, PlayerRef))
-    VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "HandleStatScaling",  Myself + "(" + RealMe.GetRace() + ")> is a creature so bypassing scaling. For some scaled CCT NPCs become gods.", 0, Venpi_DebugEnabled.GetValueInt())
-    Return
-  EndIf
 
   ;; Have a race condition which shouldn't be possible but injecting a keyword to prevent reprossessing. 
   If (Myself.HasKeyword(NPCScaler_Scaled)) 
@@ -88,10 +99,33 @@ Event OnEffectStart(ObjectReference akTarget, Actor akCaster, MagicEffect akBase
     RealMe.AddKeyword(NPCScaler_Scaled)
   EndIf
 
-  If (NPCScaler_Enabled.GetValueInt() == 1)
-    HandleStatScaling()
-  Else
+  If (NPCScaler_Enabled.GetValueInt() == 0)
     VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "OnEffectStart", "NPC Stat Scaling is currently disabled.", 0, Venpi_DebugEnabled.GetValueInt())
+    return
+  EndIf
+
+  ;; System Generated Legendary NPC we shouldn't mess with. 
+  If (RealMe.HasKeyword(ActorTypeLegendary))
+    VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "OnEffectStart",  Myself + "(" + RealMe.GetRace() + ")> is already a legendary so skipping because the engine handle stat scaling for legendary NPCs fairly well.", 0, Venpi_DebugEnabled.GetValueInt())
+    ; DebugLevelScaling("FINAL")
+    Return
+  EndIf
+
+  If (NPCScaler_Critter_Enabled.GetValueInt() == 1 && ActorIsCritter.IsTrue(Myself, PlayerRef))
+    VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "OnEffectStart",  Myself + "> is a " + RealMe.GetRace() + " so applying critter stat scaling rules.", 0, Venpi_DebugEnabled.GetValueInt())
+    HandleStatScaling(NPCScaler_Critter_Base.GetValue(), NPCScaler_Critter_ScaleRangeMin.GetValue(), NPCScaler_Critter_ScaleRangeMax.GetValue(), NPCScaler_Critter_EasterEggMode.GetValueInt() as Bool)
+  ElseIF (NPCScaler_Creature_Enabled.GetValueInt() == 1 && ActorIsCreature.IsTrue(Myself, PlayerRef))
+    VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "OnEffectStart",  Myself + "> is a " + RealMe.GetRace() + " so applying creature stat scaling rules.", 0, Venpi_DebugEnabled.GetValueInt())
+    HandleStatScaling(NPCScaler_Creature_Base.GetValue(), NPCScaler_Creature_ScaleRangeMin.GetValue(), NPCScaler_Creature_ScaleRangeMax.GetValue(), NPCScaler_Creature_EasterEggMode.GetValueInt() as Bool)
+  ElseIF (NPCScaler_Human_Enabled.GetValueInt() == 1 && ActorIsHuman.IsTrue(Myself, PlayerRef))
+    VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "OnEffectStart",  Myself + "> is a " + RealMe.GetRace() + " so applying human stat scaling rules.", 0, Venpi_DebugEnabled.GetValueInt())
+    HandleStatScaling(NPCScaler_Human_Base.GetValue(), NPCScaler_Human_ScaleRangeMin.GetValue(), NPCScaler_Human_ScaleRangeMax.GetValue(), NPCScaler_Human_EasterEggMode.GetValueInt() as Bool)
+  ElseIF (NPCScaler_Robot_Enabled.GetValueInt() == 1 && ActorIsRobot.IsTrue(Myself, PlayerRef))
+    VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "OnEffectStart",  Myself + "> is a " + RealMe.GetRace() + " so applying robot stat scaling rules.", 0, Venpi_DebugEnabled.GetValueInt())
+    HandleStatScaling(NPCScaler_Robot_Base.GetValue(), NPCScaler_Robot_ScaleRangeMin.GetValue(), NPCScaler_Robot_ScaleRangeMax.GetValue(), NPCScaler_Robot_EasterEggMode.GetValueInt() as Bool)
+  Else
+    VPI_Debug.DebugMessage("NPCScaler_StatScalerScript", "OnEffectStart",  Myself + "> is a " + RealMe.GetRace() + " so applying default stat scaling rules.", 0, Venpi_DebugEnabled.GetValueInt())
+    HandleStatScaling(NPCScaler_Default_Base.GetValue(), NPCScaler_Default_ScaleRangeMin.GetValue(), NPCScaler_Default_ScaleRangeMax.GetValue(), NPCScaler_Default_EasterEggMode.GetValueInt() as Bool)
   EndIf
 EndEvent
 
@@ -104,7 +138,7 @@ EndEvent
 ;;;
 ;;; Functions
 ;;;
-Function HandleStatScaling()
+Function HandleStatScaling(Float base, Float scaleMin, Float scaleMax, Bool easterEggMode)
   int playerLevel = Player.GetLevel()
   int myLevel = RealMe.GetLeveledActorBase().GetLevel()
 
@@ -154,7 +188,7 @@ Function HandleStatScaling()
     return
   EndIf
 
-  Float npcScalingAdjustmentToPlayer = GetScalingAdjustmentForDifficulty()
+  Float npcScalingAdjustmentToPlayer = GetScalingAdjustmentForDifficulty(base, scaleMin, scaleMax, easterEggMode)
 
   string message = "\n\n -=-=-=-=-= STAT DEBUG (" + Myself + ") =-=-=-=-=-\n\n"
   message += "Calculated a stat adjustment factor of " + npcScalingAdjustmentToPlayer + ".\n"
@@ -195,32 +229,37 @@ Function HandleStatScaling()
   DebugLevelScaling("FINAL")
 EndFunction
 
-Float Function GetScalingAdjustmentForDifficulty()
+Float Function GetScalingAdjustmentForDifficulty(Float base, Float scaleMin, Float scaleMax, Bool easterEggMode)
   Int iDifficulty = Game.GetDifficulty()
 
-  Float base = Utility.RandomFloat(NPCScaler_ScalingMin.GetValue(),NPCScaler_ScalingMax.GetValue())
-  Float calculated = 1
-  if (iDifficulty == 0)
-    ;; Very Easy Difficulty
-    calculated = base + NPCScaler_BaseAdjustment_VE.GetValue()
-  ElseIf (iDifficulty == 1)
-    ;; Easy Difficulty
-    calculated = base + NPCScaler_BaseAdjustment_E.GetValue()
-  ElseIf (iDifficulty == 2)
-    ;; Normal Difficulty
-    calculated = base + NPCScaler_BaseAdjustment_N.GetValue()
-  ElseIf (iDifficulty == 3)
-    ;; Hard Difficulty
-    calculated = base + NPCScaler_BaseAdjustment_H.GetValue()
-  ElseIf (iDifficulty == 4)
-    ;; Very Hard Difficulty
-    calculated = base + NPCScaler_BaseAdjustment_VH.GetValue()
-  Else 
-    ;; Really can only be survival/nightmare mode
-    calculated = base + NPCScaler_BaseAdjustment_TSV.GetValue()
+  If (easterEggMode && Game.GetDieRollSuccess(5, 1, 100, -1, -1))
+    scaleMin = scaleMin * 1.25
+    scaleMax = scaleMax * 1.50
   EndIf
 
-  return calculated
+  Float adjustment = Utility.RandomFloat(scaleMin,scaleMin)
+  Float calculated = 1
+  If (iDifficulty == 0)
+    ;; Very Easy Difficulty
+    calculated = (base*0) + adjustment
+  ElseIf (iDifficulty == 1)
+    ;; Easy Difficulty
+    calculated = (base*1) + adjustment
+  ElseIf (iDifficulty == 2)
+    ;; Normal Difficulty
+    calculated = (base*3) + adjustment
+  ElseIf (iDifficulty == 3)
+    ;; Hard Difficulty
+    calculated = (base*6) + adjustment
+  ElseIf (iDifficulty == 4)
+    ;; Very Hard Difficulty
+    calculated = (base*12) + adjustment
+  Else 
+    ;; Really can only be survival/nightmare mode
+    calculated = (base*30) + adjustment
+  EndIf
+
+  Return calculated
 EndFunction
 
 Function DebugLevelScaling(String scalingState)
