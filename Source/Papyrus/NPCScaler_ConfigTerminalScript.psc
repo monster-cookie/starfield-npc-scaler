@@ -11,6 +11,11 @@ Int Property CONST_RULETYPE_CREATURE=2 Auto Const Mandatory
 Int Property CONST_RULETYPE_HUMAN=3 Auto Const Mandatory
 Int Property CONST_RULETYPE_ROBOT=4 Auto Const Mandatory
 
+Int Property CONST_SCALING_DIFFICULTY_NORMAL=0 Auto Const Mandatory
+Int Property CONST_SCALING_DIFFICULTY_HARD=1 Auto Const Mandatory
+Int Property CONST_SCALING_DIFFICULTY_NIGHTMARE=2 Auto Const Mandatory
+Int Property CONST_SCALING_DIFFICULTY_APOCOLYPSE=3 Auto Const Mandatory
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Global Variables
@@ -18,6 +23,7 @@ Int Property CONST_RULETYPE_ROBOT=4 Auto Const Mandatory
 GlobalVariable Property Venpi_DebugEnabled Auto Const Mandatory
 
 GlobalVariable Property NPCScaler_Enabled Auto Const Mandatory
+GlobalVariable Property NPCScaler_HardMode_Level Auto Const Mandatory
 GlobalVariable Property NPCScaler_Legendary_ChanceToSpawn Auto Const Mandatory
 
 GlobalVariable Property NPCScaler_Default_Base Auto Const Mandatory
@@ -113,24 +119,44 @@ Function ProcessMenu(Message message, Int menuButtonClicked, Bool menuActive)
         message = NPCScaler_ConfigTerminal_MainMenu
         Venpi_DebugEnabled.SetValueInt(0)
       ElseIf (menuButtonClicked == 5)
-        ;; CLICKED 5: Configure Default/Fallback Scaling Settings
-        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 5 clicked - Launching NPCScaler_ConfigTerminal_Scaling_DefaultFallback menu.", 0, Venpi_DebugEnabled.GetValueInt())
-        message = NPCScaler_ConfigTerminal_Scaling_DefaultFallback
+        ;; CLICKED 5: Set to normal/default difficulty scaling rules
+        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 5 clicked - Set to normal/default difficulty scaling rules.", 0, Venpi_DebugEnabled.GetValueInt())
+        message = NPCScaler_ConfigTerminal_MainMenu
+        NPCScaler_HardMode_Level.SetValueInt(CONST_SCALING_DIFFICULTY_NORMAL)
       ElseIf (menuButtonClicked == 6)
-        ;; CLICKED 6: Configure Critter Race Scaling Settings
-        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 6 clicked - Launching NPCScaler_ConfigTerminal_Scaling_Critters menu.", 0, Venpi_DebugEnabled.GetValueInt())
-        message = NPCScaler_ConfigTerminal_Scaling_Critters
+        ;; CLICKED 6: Set to hard difficulty scaling rules
+        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 6 clicked - Set to hard difficulty scaling rules.", 0, Venpi_DebugEnabled.GetValueInt())
+        message = NPCScaler_ConfigTerminal_MainMenu
+        NPCScaler_HardMode_Level.SetValueInt(CONST_SCALING_DIFFICULTY_HARD)
       ElseIf (menuButtonClicked == 7)
-        ;; CLICKED 7: Configure Creature Race Scaling Settings
-        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 7 clicked - Launching NPCScaler_ConfigTerminal_Scaling_Creatures menu.", 0, Venpi_DebugEnabled.GetValueInt())
-        message = NPCScaler_ConfigTerminal_Scaling_Creatures
+        ;; CLICKED 7: Set to nightmare difficulty scaling rules
+        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 7 clicked - Set to nightmare difficulty scaling rules.", 0, Venpi_DebugEnabled.GetValueInt())
+        message = NPCScaler_ConfigTerminal_MainMenu
+        NPCScaler_HardMode_Level.SetValueInt(CONST_SCALING_DIFFICULTY_NIGHTMARE)
       ElseIf (menuButtonClicked == 8)
-        ;; CLICKED 8: Configure Human Race Scaling Settings
-        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 8 clicked - Launching NPCScaler_ConfigTerminal_Scaling_Humans menu.", 0, Venpi_DebugEnabled.GetValueInt())
-        message = NPCScaler_ConfigTerminal_Scaling_Humans
+        ;; CLICKED 8: Set to apocalypse difficulty scaling rules
+        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 8 clicked - Set to apocalypse difficulty scaling rules.", 0, Venpi_DebugEnabled.GetValueInt())
+        message = NPCScaler_ConfigTerminal_MainMenu
+        NPCScaler_HardMode_Level.SetValueInt(CONST_SCALING_DIFFICULTY_APOCOLYPSE)
       ElseIf (menuButtonClicked == 9)
-        ;; CLICKED 9: Configure Robot Race Scaling Settings
-        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 9 clicked - Launching NPCScaler_ConfigTerminal_Scaling_Robots menu.", 0, Venpi_DebugEnabled.GetValueInt())
+        ;; CLICKED 9: Configure Default/Fallback Scaling Settings
+        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 9 clicked - Launching NPCScaler_ConfigTerminal_Scaling_DefaultFallback menu.", 0, Venpi_DebugEnabled.GetValueInt())
+        message = NPCScaler_ConfigTerminal_Scaling_DefaultFallback
+      ElseIf (menuButtonClicked == 10)
+        ;; CLICKED 10: Configure Critter Race Scaling Settings
+        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 10 clicked - Launching NPCScaler_ConfigTerminal_Scaling_Critters menu.", 0, Venpi_DebugEnabled.GetValueInt())
+        message = NPCScaler_ConfigTerminal_Scaling_Critters
+      ElseIf (menuButtonClicked == 11)
+        ;; CLICKED 11: Configure Creature Race Scaling Settings
+        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 11 clicked - Launching NPCScaler_ConfigTerminal_Scaling_Creatures menu.", 0, Venpi_DebugEnabled.GetValueInt())
+        message = NPCScaler_ConfigTerminal_Scaling_Creatures
+      ElseIf (menuButtonClicked == 12)
+        ;; CLICKED 12: Configure Human Race Scaling Settings
+        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 12 clicked - Launching NPCScaler_ConfigTerminal_Scaling_Humans menu.", 0, Venpi_DebugEnabled.GetValueInt())
+        message = NPCScaler_ConfigTerminal_Scaling_Humans
+      ElseIf (menuButtonClicked == 13)
+        ;; CLICKED 13: Configure Robot Race Scaling Settings
+        VPI_Debug.DebugMessage("NPCScaler_ConfigTerminalScript", "ProcessMenu", "Main Menu Button 13 clicked - Launching NPCScaler_ConfigTerminal_Scaling_Robots menu.", 0, Venpi_DebugEnabled.GetValueInt())
         message = NPCScaler_ConfigTerminal_Scaling_Robots
       EndIf
 

@@ -2,11 +2,21 @@ Scriptname NPCScaler_StatScalerScript extends ActiveMagicEffect
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; Constants
+;;;
+Int Property CONST_SCALING_DIFFICULTY_NORMAL=0 Auto Const Mandatory
+Int Property CONST_SCALING_DIFFICULTY_HARD=1 Auto Const Mandatory
+Int Property CONST_SCALING_DIFFICULTY_NIGHTMARE=2 Auto Const Mandatory
+Int Property CONST_SCALING_DIFFICULTY_APOCOLYPSE=3 Auto Const Mandatory
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;; Global Variables
 ;;;
 GlobalVariable Property Venpi_DebugEnabled Auto Const Mandatory
 
 GlobalVariable Property NPCScaler_Enabled Auto Const Mandatory
+GlobalVariable Property NPCScaler_HardMode_Level Auto Const Mandatory
 GlobalVariable Property NPCScaler_Legendary_ChanceToSpawn Auto Const Mandatory
 
 GlobalVariable Property NPCScaler_Default_Base Auto Const Mandatory
@@ -214,13 +224,17 @@ Function HandleStatScaling(Float base, Float scaleMin, Float scaleMax, Bool east
   message += "Adjusting my EM Damage Resist stat to " + scaledCriticalHitChance + " from " + myCriticalHitChance + " using a scalig factor of " + npcScalingAdjustmentToPlayer  + " against the player's " + playerCriticalHitChance + " EM damage resist.\n"
 
 
-  ;; Some stats adjust by rank
-  Float scaledAttackDamageMult = Utility.RandomFloat(0.95, 1.25)
-  Float scaledCriticalHitDamageMult = Utility.RandomFloat(0.95, 1.25)
+  ;; Some stats adjust by level difference
+  Float levelMult = (playerLevel/100) as Int
+  If (levelMult <= 0)
+    levelMult = 0.5
+  EndIf
 
+  Float scaledAttackDamageMult = Math.sqrt(Math.sqrt(playerLevel)) * levelMult
   message += "Adjusting my attack multiplier to " + scaledAttackDamageMult + " from " + myAttackDamageMult + " against the player's " + playerAttackDamageMult + ".\n"
   RealMe.SetValue(AttackDamageMult, scaledAttackDamageMult)
 
+  Float scaledCriticalHitDamageMult = (Math.sqrt(Math.sqrt(playerLevel))/2) * levelMult
   message += "Adjusting my critical damage multiplier to " + scaledCriticalHitDamageMult + " from " + myCriticalHitDamageMult + " against the player's " + playerCriticalHitDamageMult + ".\n"
   RealMe.SetValue(CriticalHitDamageMult, scaledCriticalHitDamageMult)
 
@@ -257,6 +271,14 @@ Float Function GetScalingAdjustmentForDifficulty(Float base, Float scaleMin, Flo
   Else 
     ;; Really can only be survival/nightmare mode
     calculated = (base*30) + adjustment
+  EndIf
+
+  If (NPCScaler_HardMode_Level.GetValueInt() == CONST_SCALING_DIFFICULTY_HARD)
+    calculated += 2
+  ElseIf (NPCScaler_HardMode_Level.GetValueInt() == CONST_SCALING_DIFFICULTY_NIGHTMARE)
+    calculated += 4
+  ElseIf (NPCScaler_HardMode_Level.GetValueInt() == CONST_SCALING_DIFFICULTY_APOCOLYPSE)
+    calculated += 8
   EndIf
 
   Return calculated
