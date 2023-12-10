@@ -1,5 +1,8 @@
 # V1.0 Permutations
 
+## V1.0.6
+* Removed attack/crit multipliers for now. When used with other mods (Peak, Scarfield, Better Enemy Weapons, etc) they cause way too much damage scaling. Will readd when I can figure out a way to use weapon damage.
+
 ## V1.0.5
 * New scaling/preset difficulties Normal no change to the rules, hard increases the scaling factor by 2, nightmare increases it by 4, and apocalypse increase by 8. 
 * Crit damage/Attack mult are now a factor of your level diff so if you are level 10 the attack boost is 1, level 50 is 1.32, level 100 is 1.58, level 150 is 3.49, level 250 is 7.96
